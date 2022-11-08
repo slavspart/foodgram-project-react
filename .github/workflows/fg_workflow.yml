@@ -50,7 +50,6 @@ jobs:
       # Деплоим только если пуш в мастер
       steps:
         - name: executing remote ssh commands to deploy
-          continue-on-error: true
           uses: appleboy/ssh-action@master
           with:
             host: ${{ secrets.HOST }}
