@@ -62,8 +62,8 @@ jobs:
               sudo docker-compose stop
               sudo rm .env
               sudo touch .env
-              sudo echo DJANGO_KEY="${{ secrets.DJANGO_KEY }}" | sudo tee .env
-              sudo echo HOSTS=${{ secrets.HOSTS }} | sudo tee .env
+              sudo echo DJANGO_KEY="${{ secrets.DJANGO_KEY }}" | sudo tee -a .env
+              sudo echo HOSTS=${{ secrets.HOSTS }} | sudo tee - a .env
               sudo echo DB_ENGINE=${{ secrets.DB_ENGINE }} | sudo tee -a .env
               sudo echo DB_NAME=${{ secrets.DB_NAME }} | sudo tee -a .env
               sudo echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} | sudo tee -a .env
