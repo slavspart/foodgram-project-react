@@ -42,7 +42,7 @@ jobs:
           with:
             context: ./backend/foodgram
             push: true
-            tags: slavspart/foodgram_backend:latest 
+            tags: slavspart/foodgram-backend:latest 
   deploy:
       runs-on: ubuntu-latest
       needs: build_and_push_to_docker_hub
