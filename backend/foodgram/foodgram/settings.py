@@ -166,8 +166,9 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': 'general.log',
+            'maxBytes': 5242880,
         },
     },
     # пишем логи в файл для работы с Gunicorn
