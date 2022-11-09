@@ -61,15 +61,16 @@ jobs:
               sudo docker-compose stop
               sudo rm .env
               sudo touch .env
-              sudo echo DJANGO_KEY="${{ secrets.DJANGO_KEY }}" | sudo tee -a .env
               sudo echo HOSTS=${{ secrets.HOSTS }} | sudo tee - a .env
+              sudo echo DJANGO_KEY="${{ secrets.DJANGO_KEY }}" | sudo tee -a .env
               sudo echo DB_ENGINE=${{ secrets.DB_ENGINE }} | sudo tee -a .env
               sudo echo DB_NAME=${{ secrets.DB_NAME }} | sudo tee -a .env
               sudo echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} | sudo tee -a .env
               sudo echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} | sudo tee -a .env
               sudo echo DB_HOST=${{ secrets.DB_HOST }} | sudo tee  -a .env
               sudo echo DB_PORT=${{ secrets.DB_PORT }} | sudo tee -a .env
-              cat .env
+              sudo cat .env
+              ls
   #           sudo docker-compose pull backend && sudo docker-compose up -d
   #             sudo docker-compose exec web python manage.py migrate
   #             sudo docker-compose exec web python manage.py collectstatic --no-input
