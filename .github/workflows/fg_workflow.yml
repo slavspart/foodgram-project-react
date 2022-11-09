@@ -69,9 +69,7 @@ jobs:
               sudo echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} | sudo tee -a .env
               sudo echo DB_HOST=${{ secrets.DB_HOST }} | sudo tee  -a .env
               sudo echo DB_PORT=${{ secrets.DB_PORT }} | sudo tee -a .env
-              sudo cat .env
-              ls
-  #           sudo docker-compose pull backend && sudo docker-compose up -d
+              sudo docker-compose pull backend && sudo docker-compose up -d
   #             sudo docker-compose exec web python manage.py migrate
   #             sudo docker-compose exec web python manage.py collectstatic --no-input
   
