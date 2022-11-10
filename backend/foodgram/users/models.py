@@ -1,9 +1,5 @@
-from email.policy import default
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (
-    EmailValidator,
-    RegexValidator,
-)
+from django.core.validators import EmailValidator
 from django.db import models
 from django.db.models import Q, F
 
@@ -14,10 +10,7 @@ class User(AbstractUser):
     email = models.EmailField(
         max_length=254,
         unique=True,
-        validators=[
-            EmailValidator,
-        ],
-        verbose_name='Электронная почта',
+        validators=[EmailValidator, ],
     )
     first_name = models.TextField(
         max_length=150,
@@ -41,15 +34,16 @@ class User(AbstractUser):
 
 class Subscription(models.Model):
     author = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name='subscription'
-        )
+    )
     follower = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name='follower',
-        )
+    )
+
     class Meta:
         constraints = [
             models.CheckConstraint(

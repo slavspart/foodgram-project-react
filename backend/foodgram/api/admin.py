@@ -7,18 +7,21 @@ from .models import (
     RecipeTag,
     RecipeIngredient,
     ShoppingCart
-    )
+)
+
 
 class TagAdmin(admin.ModelAdmin):
     pass
 
+
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'author','favorited')
+    list_display = ('name', 'author', 'favorited')
     list_filter = ('name', 'tags')
     readonly_fields = ('favorited',)
 
     def favorited(self, instance):
         return instance.favorite.all().count()
+
 
 @admin.register(Ingredient)
 # декоратор для регистрации кастомной модели админки
@@ -37,8 +40,10 @@ class RecipeIngredientAdmin(RecipeIngredient):
 class FavoriteAdmin(Favorite):
     pass
 
+
 class ShoppingCartAdmin(ShoppingCart):
     pass
+
 
 # Register your models here.
 admin.site.register(Tag)
