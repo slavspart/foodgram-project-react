@@ -85,4 +85,5 @@ jobs:
             key: ${{ secrets.SSH_KEY }}
             passphrase: ${{ secrets.PASSPHRASE }}
             script: |
-            sudo docker-compose exec backend python manage.py collectstatic --no-input
+              cd infra
+              sudo docker-compose exec backend python manage.py collectstatic --no-input
