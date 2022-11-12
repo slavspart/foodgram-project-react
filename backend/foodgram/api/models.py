@@ -1,17 +1,19 @@
 from django.db import models
-
 from users.models import User
 
 
 class Tag(models.Model):
     """Модель тэга"""
-    name = models.CharField(max_length=100,)
-    color = models.CharField(max_length=7,)
-    slug = models.SlugField(unique=True,)
+    name = models.CharField(max_length=100, verbose_name='имя')
+    color = models.CharField(max_length=7, verbose_name='цвет')
+    slug = models.SlugField(unique=True, verbose_name='slug')
 
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Тэг'
+        verbose_name_plural = 'Тэги'
 
 class Ingredient(models.Model):
     """Модель ингредиентов"""

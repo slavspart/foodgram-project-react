@@ -1,16 +1,11 @@
-from rest_framework import viewsets, mixins, status
 from djoser.views import UserViewSet
-
+from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
 
-
-from .models import User, Subscription
+from .models import Subscription, User
 from .pagination import LimitPagination
-from .serializers import (
-    UserRegistrSerializer,
-    UserSerializer,
-    SubscriptionSerializer
-    )
+from .serializers import (SubscriptionSerializer, UserRegistrSerializer,
+                          UserSerializer)
 
 
 class CustomUserViewsSet(UserViewSet):

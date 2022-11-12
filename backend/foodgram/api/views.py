@@ -1,26 +1,15 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse
-from rest_framework import (
-    exceptions,
-    permissions,
-    status,
-    mixins,
-    viewsets,
-)
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import exceptions, mixins, permissions, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
 from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .pagination import LimitPagination
-from .serializers import (
-    FavoriteSerializer,
-    IngredientSerializer,
-    RecipeCreateSerializer,
-    RecipeSerializer,
-    ShoppingCartSerializer,
-    TagSerializer
-)
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeCreateSerializer, RecipeSerializer,
+                          ShoppingCartSerializer, TagSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

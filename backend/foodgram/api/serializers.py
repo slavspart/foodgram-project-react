@@ -1,19 +1,13 @@
-from .models import (
-    Favorite,
-    Ingredient,
-    Recipe,
-    RecipeTag,
-    ShoppingCart,
-    Tag,
-    RecipeIngredient
-)
-from users.serializers import UserSerializer
-
 import base64
+
 # Модуль с функциями кодирования и декодирования base64
 from django.core.files.base import ContentFile
 # Модуль для создания файла из base64
 from rest_framework import serializers
+from users.serializers import UserSerializer
+
+from .models import (Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
+                     ShoppingCart, Tag)
 
 
 class TagSerializer (serializers.ModelSerializer):
