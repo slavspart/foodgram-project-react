@@ -2,7 +2,7 @@ import pandas
 # библиотека для работы c csv
 import os
 from api.models import Ingredient
-file_path = os.path.join(os.getcwd(), '../../data/ingredients.csv')
+file_path = os.path.join(os.getcwd(), 'data/ingredients.csv')
 print (file_path)   
 #указываем путь до файла
 data_frame = pandas.read_csv(file_path, names=['name','measurement_unit'])
