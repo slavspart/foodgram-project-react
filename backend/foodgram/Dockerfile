@@ -4,6 +4,8 @@ RUN mkdir /app
 
 COPY requirements.txt /app
 
+COPY ../../data /app
+
 RUN pip3 install -r /app/requirements.txt --no-cache-dir
 
 COPY ./ /app
