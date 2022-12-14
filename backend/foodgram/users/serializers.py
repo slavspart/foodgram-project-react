@@ -103,10 +103,11 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_recipes_count(self, obj):
-        return len(obj.author.recipes.all())
+        return obj.author.recipes.count()
 
     def get_is_subscribed(self, obj):
-        return True
+        return self.context.get('request').user.follower.filter(
+            author=obj.author).exists()
         # ?не очень понятно зачем это поле может понадобиться в выдаче api
         # ведь здесь только пользователи на которых ты подписан
 

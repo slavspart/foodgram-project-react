@@ -1,11 +1,7 @@
-import base64
-
-# Модуль с функциями кодирования и декодирования base64
-from django.core.files.base import ContentFile
-# Модуль для создания файла из base64
 from rest_framework import serializers
 from users.serializers import UserSerializer
 
+from .fields import Base64ImageField
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
                      ShoppingCart, Tag)
 
@@ -36,24 +32,6 @@ class RecipeIngredientSerializer (serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'name', 'amount', 'measurement_unit')
-
-
-class Base64ImageField(serializers.ImageField):
-    """Поле для управления картинками"""
-
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            # декодируем
-            ext = format.split('/')[-1]
-            # делим строку на части
-            # и извлечкаем расширение файла.
-            data = ContentFile(base64.b64decode(imgstr), name='recipe.' + ext)
-            # Сохраняем в файл
-        return super().to_internal_value(data)
-
-    def to_representation(self, value):
-        return value.url
 
 
 class RecipeSerializer (serializers.ModelSerializer):
@@ -134,11 +112,14 @@ class RecipeTagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'color', 'slug')
 
 
-class RecipeCreateSerializer(serializers.ModelSerializer):
+class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания рецептов"""
     ingredients = RecipeIngredientCreateSerializer(
         many=True, source='recipe_ingredients')
-    tags = TagSerializer(many=True, read_only=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
+        )
     image = Base64ImageField()
 
     class Meta:
@@ -149,51 +130,66 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def validate_cooking_time(self, value):
         if value < 1:
             raise serializers.ValidationError(
-                'Cooking time must be more than 0')
+                'Время приготовления дожно превышать 0')
         return value
+
+    def validate_ingredients(self, value):
+        # валидируем повторение ингредиентов
+        list_of_ids = []
+        for ingredient in self.initial_data.get('ingredients'):
+            if ingredient.get('id') not in list_of_ids:
+                list_of_ids.append(ingredient.get('id'))
+            else:
+                raise serializers.ValidationError(
+                    'Ингредиенты должны быть уникальны')
+        return value
+
+    def create_recipe_ingredients(self, instance, ingredients):
+        """Метод для создания ингредиентов в рецепте"""
+        """через промежуточную модель"""
+        RecipeIngredient.objects.bulk_create(
+            [RecipeIngredient(
+                recipe=instance,
+                ingredient=ingredient.get('ingredient'),
+                amount=ingredient.get('amount')
+                ) for ingredient in ingredients])
+
+    def create_recipe_tags(self, instance, tags):
+        """Метод для создания тэгов в рецепте"""
+        """через промежуточную модель"""
+        RecipeTag.objects.bulk_create(
+            [RecipeTag(recipe=instance, tag=tag) for tag in tags])
 
     def create(self, validated_data):
         validated_data['author_id'] = self.context.get('request').user.id
         ingredients = validated_data.pop('recipe_ingredients')
-        tags = self.initial_data.get('tags')
-        # удаляем из validated_data ингредиенты, т.к. нельзя прямо оттуда
+        tags = validated_data.pop('tags')
+        # удаляем из validated_data ингредиенты и тэги
+        # т.к. нельзя прямо оттуда
         # передать значение в рецепт
         instance = Recipe.objects.create(**validated_data)
         # создаем рецепт без ингредиентов
-        for ingredient in ingredients:
-            RecipeIngredient.objects.create(
-                ingredient=ingredient.get('ingredient'),
-                recipe=instance, amount=ingredient.get('amount'))
-        for tag in tags:
-            RecipeTag.objects.create(
-                tag_id=tag,
-                recipe=instance,
-            )
-        # в цикле создаем промежуточный объект с созданным рецептом
-        # и нужными ингредиентами
+        self.create_recipe_ingredients(instance, ingredients)
+        # вызываем методы добавления ингредиентов и тэгов
+        self.create_recipe_tags(instance, tags)
         instance.save()
         return instance
 
     def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.image = validated_data.get('image', instance.image)
-        instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get(
-            'cooking_time', instance.cooking_time)
         initial_ingredient_ids = list(
             instance.recipe_ingredients.all().values_list(
                 'ingredient_id', flat=True))
         # cоздаем список ингредиентов которые уже есть в рецепте
         # flat=True отвечает за то, что передаются только id ингредиентов
         request_ingredient_ids = [
-            dict['id'] for dict in
-            self.initial_data['ingredients'] if 'id' in dict]
+            request_ingredient['id'] for request_ingredient in
+            self.initial_data['ingredients'] if 'id' in request_ingredient]
         # создаем список переданных в запросе ингредиентов
         for ingredient in initial_ingredient_ids:
             if ingredient not in request_ingredient_ids:
                 RecipeIngredient.objects.filter(
                     ingredient_id=ingredient, recipe=instance).delete()
-        # проверяем, если среди имеющихся нет тех, которые были запрошены
+        # если среди имеющихся нет тех, которые есть в запросе
         # удаляем лишние
         ingredients = validated_data.pop('recipe_ingredients')
         for ingredient in ingredients:
@@ -225,7 +221,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 RecipeTag.objects.get_or_create(
                     recipe=instance, tag_id=tag)
         instance.save()
-        return instance
+        # return instance
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        # меняем тип поля tags для отображения
+        self.fields['tags'] = RecipeTagSerializer(
+            many=True, source='recipe_tags')
+        return super().to_representation(instance)
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
