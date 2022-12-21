@@ -136,9 +136,9 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, value):
         # валидируем повторение ингредиентов
         list_of_ids = []
-        for ingredient in self.initial_data.get('ingredients'):
-            if ingredient.get('id') not in list_of_ids:
-                list_of_ids.append(ingredient.get('id'))
+        for ingredient in value:
+            if ingredient.get('ingredient') not in list_of_ids:
+                list_of_ids.append(ingredient.get('ingredient'))
             else:
                 raise serializers.ValidationError(
                     'Ингредиенты должны быть уникальны')
@@ -150,9 +150,15 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         RecipeIngredient.objects.bulk_create(
             [RecipeIngredient(
                 recipe=instance,
-                ingredient=ingredient.get('ingredient'),
-                amount=ingredient.get('amount')
-                ) for ingredient in ingredients])
+                ingredient=ingredient,
+                amount=amount
+                ) for ingredient, amount in ingredients.items()])
+        # RecipeIngredient.objects.bulk_create(
+        #     [RecipeIngredient(
+        #         recipe=instance,
+        #         ingredient=ingredient.get('ingredient'),
+        #         amount=ingredient.get('amount')
+        #         ) for ingredient in ingredients])
 
     def create_recipe_tags(self, instance, tags):
         """Метод для создания тэгов в рецепте"""
@@ -162,7 +168,8 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['author_id'] = self.context.get('request').user.id
-        ingredients = validated_data.pop('recipe_ingredients')
+        ingredients = {
+            ingredient.get('ingredient'):ingredient.get('amount') for ingredient in validated_data.pop('recipe_ingredients')}
         tags = validated_data.pop('tags')
         # удаляем из validated_data ингредиенты и тэги
         # т.к. нельзя прямо оттуда
@@ -170,58 +177,34 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         instance = Recipe.objects.create(**validated_data)
         # создаем рецепт без ингредиентов
         self.create_recipe_ingredients(instance, ingredients)
-        # вызываем методы добавления ингредиентов и тэгов
+        # переиспользуем метод создания ингредиентов 1 раз
         self.create_recipe_tags(instance, tags)
-        instance.save()
         return instance
 
     def update(self, instance, validated_data):
-        initial_ingredient_ids = list(
-            instance.recipe_ingredients.all().values_list(
-                'ingredient_id', flat=True))
-        # cоздаем список ингредиентов которые уже есть в рецепте
-        # flat=True отвечает за то, что передаются только id ингредиентов
-        request_ingredient_ids = [
-            request_ingredient['id'] for request_ingredient in
-            self.initial_data['ingredients'] if 'id' in request_ingredient]
-        # создаем список переданных в запросе ингредиентов
-        for ingredient in initial_ingredient_ids:
-            if ingredient not in request_ingredient_ids:
+        existing_ingredients = Ingredient.objects.filter(
+            ingrec__in=instance.recipe_ingredients.all())
+        request_ingredients = {
+            ingredient.get('ingredient'):ingredient.get('amount') 
+            for ingredient in validated_data.pop('recipe_ingredients')}
+        new_ingredients={}
+        for ingredient in existing_ingredients:
+            if ingredient not in request_ingredients:
                 RecipeIngredient.objects.filter(
-                    ingredient_id=ingredient, recipe=instance).delete()
-        # если среди имеющихся нет тех, которые есть в запросе
-        # удаляем лишние
-        ingredients = validated_data.pop('recipe_ingredients')
-        for ingredient in ingredients:
-            if RecipeIngredient.objects.filter(
-                ingredient=ingredient.get(
-                    'ingredient'), recipe=instance).exists():
-                RecipeIngredient.objects.filter(
-                    ingredient=ingredient.get('ingredient')).update(
-                        amount=ingredient.get('amount'))
-            # проверяем если такой ингредиент существует,
-            # то обновляем количество
+                    ingredient=ingredient, recipe=instance).delete()
+        for ingredient, amount in request_ingredients.items():
+            if not RecipeIngredient.objects.filter(
+                ingredient=ingredient, recipe=instance).exists():
+                new_ingredients[ingredient]=amount
             else:
-                RecipeIngredient.objects.create(
-                    ingredient=ingredient.get('ingredient'),
-                    recipe=instance,
-                    amount=ingredient.get('amount')
-                )
-            # если ингредиент отсутствует создаем новый
-            # объект промежуточной модели
-
-        if 'tags' in self.initial_data:
-            initial_tags = list(
-                instance.recipe_tags.all().values_list('tag', flat=True))
-            request_tags = self.initial_data.get('tags')
-            for tag in initial_tags:
-                if tag not in request_tags:
-                    RecipeTag.objects.filter(recipe=instance, tag=tag).delete()
-            for tag in request_tags:
-                RecipeTag.objects.get_or_create(
-                    recipe=instance, tag_id=tag)
+                RecipeIngredient.objects.filter(
+                        ingredient=ingredient).update(
+                        amount=amount)
+        self.create_recipe_ingredients(instance, new_ingredients)                
+        # переиспользуем метод create_recipe_ingredient 2 раз
+        # метод create recipe_tag переиспользовать не надо, т.к.
+        # все работает из коробки
         instance.save()
-        # return instance
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):

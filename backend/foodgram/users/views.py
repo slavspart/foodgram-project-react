@@ -14,33 +14,7 @@ class CustomUserViewsSet(UserViewSet):
     serializer_class = UserSerializer
     pagination_class = LimitPagination
 
-    def retrieve(self, request, *args, **kwargs):
-        # переписываем метод, чтобы отображать True,
-        # если есть подписка на этого автора
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        data = serializer.data
-        data['is_surbscribed'] = request.user.follower.filter(
-            author=kwargs.get('id')).exists()
-        # запросили queryset через related_name
-        serializer = UserSerializer(instance=instance, data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def create(self, request, *args, **kwargs):
-        serializer = UserRegistrSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-            )
-
-
+ 
 class SubscriptionViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,

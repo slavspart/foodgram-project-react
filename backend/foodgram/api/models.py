@@ -1,5 +1,8 @@
-from django.db import models
 from users.models import User
+
+from django.db import models
+# поправил но странно, что isort предлагает именно
+# предыдущий вариант
 
 
 class Tag(models.Model):
@@ -8,12 +11,12 @@ class Tag(models.Model):
     color = models.CharField(max_length=7, verbose_name='цвет')
     slug = models.SlugField(unique=True, verbose_name='slug')
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
+
+    def __str__(self):
+        return self.name
 
 
 class Ingredient(models.Model):
@@ -24,12 +27,12 @@ class Ingredient(models.Model):
         verbose_name='единица измерения',
         )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+
+    def __str__(self):
+        return self.name
 
 
 class Recipe(models.Model):
@@ -55,13 +58,12 @@ class Recipe(models.Model):
         verbose_name='время приготовления',
         )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
+    def __str__(self):
+        return self.name
 
 class RecipeTag(models.Model):
     recipe = models.ForeignKey(
@@ -74,6 +76,7 @@ class RecipeTag(models.Model):
         Tag,
         on_delete=models.CASCADE,
         verbose_name='тэг',
+        related_name = 'tags_rec'
         )
 
     class Meta:
@@ -115,7 +118,7 @@ class RecipeIngredient(models.Model):
             )]
 
     def __str__(self):
-        return f'{self.recipe} in {self.ingredient}'
+        return f'{self.ingredient_id} {self.amount} in {self.recipe} - {self.recipe_id}'
 
 
 class Favorite(models.Model):
@@ -136,7 +139,6 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
-        unique_together = ['user', 'recipe']
         constraints = [models.UniqueConstraint(
             fields=['user', 'recipe'],
             name='unique_favorite'

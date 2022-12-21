@@ -34,12 +34,9 @@ class RecipeFilter(filters.FilterSet):
         queryset = queryset.order_by('-id')
         tags = []
         tags = self.request.query_params.getlist('tags')
-        # передаем из query список значений tags, чтобы потом отфильтровать
-        # по вхождению в список
         if tags:
             queryset = queryset.filter(
                 tags__slug__in=tags).distinct().order_by('-id')
-            # distinct, чтобы убрать повторения, если больше одно тэга
         return queryset
 
 

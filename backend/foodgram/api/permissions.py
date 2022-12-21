@@ -1,5 +1,4 @@
-from rest_framework import permissions
-from rest_framework import exceptions
+from rest_framework import permissions, exceptions
 
 
 class UpdateRestriction(permissions.BasePermission):

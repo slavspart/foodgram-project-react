@@ -15,10 +15,19 @@ class RecipeForSubscriptionSerializer(serializers.ModelSerializer):
 
 class UserSerializer(UserSerializer):
     """Сериализация получения юзеров"""
+    
+    is_surbscribed = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'is_surbscribed')
+        
+    
+    def get_is_surbscribed(self, obj):
+        return self.context.get('request').user.follower.filter(
+            author=obj).exists()
+
 
 
 class UserRegistrSerializer(serializers.ModelSerializer):
@@ -108,8 +117,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         return self.context.get('request').user.follower.filter(
             author=obj.author).exists()
-        # ?не очень понятно зачем это поле может понадобиться в выдаче api
-        # ведь здесь только пользователи на которых ты подписан
 
     def save(self, **kwargs):
         follower = self.context.get('request').user
