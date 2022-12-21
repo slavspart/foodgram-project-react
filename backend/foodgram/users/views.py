@@ -4,24 +4,21 @@ from rest_framework.response import Response
 
 from .models import Subscription, User
 from .pagination import LimitPagination
-from .serializers import (SubscriptionSerializer, UserRegistrSerializer,
-                          UserSerializer)
+from .serializers import SubscriptionSerializer, UserSerializer
 
 
 class CustomUserViewsSet(UserViewSet):
-    """Вьюсет для юзеров"""
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = LimitPagination
 
- 
+
 class SubscriptionViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    """Вьюсет подписок"""
     serializer_class = SubscriptionSerializer
     pagination_class = LimitPagination
 

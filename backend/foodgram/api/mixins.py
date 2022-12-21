@@ -12,8 +12,6 @@ class CreateDestroyViewset(
         recipe = self.kwargs.get('id')
         user = self.request.user
         serializer.save(recipe_id=recipe, user=user)
-        # переопределяем метод, чтобы передать в модель
-        # юзера и рецепт
 
     def destroy(self, request, *args, **kwargs):
         instance = request.user.favorite.filter(recipe=kwargs.get('id'))

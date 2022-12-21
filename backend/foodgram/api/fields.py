@@ -4,7 +4,6 @@ from rest_framework import serializers
 
 
 class Base64ImageField(serializers.ImageField):
-    """Поле для управления картинками"""
 
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):

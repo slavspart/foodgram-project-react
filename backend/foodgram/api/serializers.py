@@ -7,21 +7,18 @@ from .models import (Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
 
 
 class TagSerializer (serializers.ModelSerializer):
-    """Сериализатор тегов"""
     class Meta:
         model = Tag
         fields = '__all__'
 
 
 class IngredientSerializer (serializers.ModelSerializer):
-    """Сериализатор ингредиентов"""
     class Meta:
         model = Ingredient
         fields = ('__all__')
 
 
 class RecipeIngredientSerializer (serializers.ModelSerializer):
-    """Сериализатор для получения ингредиентов для рецепта"""
     measurement_unit = serializers.CharField(
         source='ingredient.measurement_unit')
     id = serializers.PrimaryKeyRelatedField(
@@ -35,7 +32,6 @@ class RecipeIngredientSerializer (serializers.ModelSerializer):
 
 
 class RecipeSerializer (serializers.ModelSerializer):
-    """Сериализатор для получения рецептов"""
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     author = UserSerializer(read_only=False,)
@@ -76,7 +72,6 @@ class RecipeSerializer (serializers.ModelSerializer):
 
 
 class RecipeIngredientCreateSerializer (serializers.ModelSerializer):
-    """Сериализатор для ингредиентов в рецепте"""
     id = serializers.PrimaryKeyRelatedField(
         source='ingredient',
         queryset=Ingredient.objects.all()
@@ -100,7 +95,6 @@ class RecipeIngredientCreateSerializer (serializers.ModelSerializer):
 
 
 class RecipeTagSerializer(serializers.ModelSerializer):
-    """Сериализатор тэгов в рецепте"""
     id = serializers.PrimaryKeyRelatedField(
         source='tag', queryset=Tag.objects.all())
     name = serializers.CharField(source='tag.name', required=False)
@@ -113,7 +107,6 @@ class RecipeTagSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания рецептов"""
     ingredients = RecipeIngredientCreateSerializer(
         many=True, source='recipe_ingredients')
     tags = serializers.PrimaryKeyRelatedField(
@@ -134,7 +127,6 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_ingredients(self, value):
-        # валидируем повторение ингредиентов
         list_of_ids = []
         for ingredient in value:
             if ingredient.get('ingredient') not in list_of_ids:
@@ -145,31 +137,24 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def create_recipe_ingredients(self, instance, ingredients):
-        """Метод для создания ингредиентов в рецепте"""
-        """через промежуточную модель"""
         RecipeIngredient.objects.bulk_create(
             [RecipeIngredient(
                 recipe=instance,
                 ingredient=ingredient,
                 amount=amount
                 ) for ingredient, amount in ingredients.items()])
-        # RecipeIngredient.objects.bulk_create(
-        #     [RecipeIngredient(
-        #         recipe=instance,
-        #         ingredient=ingredient.get('ingredient'),
-        #         amount=ingredient.get('amount')
-        #         ) for ingredient in ingredients])
 
     def create_recipe_tags(self, instance, tags):
-        """Метод для создания тэгов в рецепте"""
-        """через промежуточную модель"""
         RecipeTag.objects.bulk_create(
             [RecipeTag(recipe=instance, tag=tag) for tag in tags])
 
     def create(self, validated_data):
         validated_data['author_id'] = self.context.get('request').user.id
         ingredients = {
-            ingredient.get('ingredient'):ingredient.get('amount') for ingredient in validated_data.pop('recipe_ingredients')}
+            ingredient.get(
+                'ingredient'): ingredient.get(
+                    'amount') for ingredient in validated_data.pop(
+                        'recipe_ingredients')}
         tags = validated_data.pop('tags')
         # удаляем из validated_data ингредиенты и тэги
         # т.к. нельзя прямо оттуда
@@ -185,22 +170,22 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         existing_ingredients = Ingredient.objects.filter(
             ingrec__in=instance.recipe_ingredients.all())
         request_ingredients = {
-            ingredient.get('ingredient'):ingredient.get('amount') 
+            ingredient.get('ingredient'): ingredient.get('amount')
             for ingredient in validated_data.pop('recipe_ingredients')}
-        new_ingredients={}
+        new_ingredients = {}
         for ingredient in existing_ingredients:
             if ingredient not in request_ingredients:
                 RecipeIngredient.objects.filter(
                     ingredient=ingredient, recipe=instance).delete()
         for ingredient, amount in request_ingredients.items():
             if not RecipeIngredient.objects.filter(
-                ingredient=ingredient, recipe=instance).exists():
-                new_ingredients[ingredient]=amount
+                    ingredient=ingredient, recipe=instance).exists():
+                new_ingredients[ingredient] = amount
             else:
                 RecipeIngredient.objects.filter(
                         ingredient=ingredient).update(
                         amount=amount)
-        self.create_recipe_ingredients(instance, new_ingredients)                
+        self.create_recipe_ingredients(instance, new_ingredients)
         # переиспользуем метод create_recipe_ingredient 2 раз
         # метод create recipe_tag переиспользовать не надо, т.к.
         # все работает из коробки

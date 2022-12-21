@@ -18,7 +18,6 @@ class RecipeAdmin(admin.ModelAdmin):
 
 
 @admin.register(Ingredient)
-# декоратор для регистрации кастомной модели админки
 class IndgredientAdmin(admin.ModelAdmin):
     list_filter = ('name',)
 
@@ -39,7 +38,6 @@ class ShoppingCartAdmin(ShoppingCart):
     pass
 
 
-# Register your models here.
 admin.site.register(Tag)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(RecipeTag)

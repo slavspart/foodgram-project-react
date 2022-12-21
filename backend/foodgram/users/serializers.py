@@ -7,32 +7,25 @@ from .models import Subscription, User
 
 
 class RecipeForSubscriptionSerializer(serializers.ModelSerializer):
-    """Класс сериализации подписок"""
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time',)
 
 
 class UserSerializer(UserSerializer):
-    """Сериализация получения юзеров"""
-    
     is_surbscribed = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'is_surbscribed')
-        
-    
+
     def get_is_surbscribed(self, obj):
         return self.context.get('request').user.follower.filter(
             author=obj).exists()
 
 
-
 class UserRegistrSerializer(serializers.ModelSerializer):
-    """Сериализатор для регистраци пользователей."""
-
     username = serializers.CharField(
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())],
@@ -72,7 +65,6 @@ class UserRegistrSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    """Класс сериализации подписок"""
     email = serializers.CharField(required=False, source='author.email')
     id = serializers.IntegerField(required=False, source='author.id')
     username = serializers.CharField(required=False, source='author.username')
@@ -105,9 +97,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         if 'recipes_limit' in self.context.get('request').query_params:
             recipes_limit = int(self.context.get(
                 'request').query_params.get('recipes_limit'))
-            # получаем число рецептов из запроса
             recipes = recipes[:recipes_limit]
-            # ограничиваем число последних рецептов
         serializer = RecipeForSubscriptionSerializer(recipes, many=True,)
         return serializer.data
 

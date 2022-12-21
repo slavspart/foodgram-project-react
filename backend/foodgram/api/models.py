@@ -20,7 +20,6 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    """Модель ингредиентов"""
     name = models.CharField(max_length=200, db_index=True, verbose_name='имя')
     measurement_unit = models.CharField(
         max_length=50,
@@ -36,7 +35,6 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
-    """Модель рецептов"""
     tags = models.ManyToManyField(
         Tag,
         through='RecipeTag',
@@ -65,6 +63,7 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name
 
+
 class RecipeTag(models.Model):
     recipe = models.ForeignKey(
         Recipe,
@@ -76,7 +75,7 @@ class RecipeTag(models.Model):
         Tag,
         on_delete=models.CASCADE,
         verbose_name='тэг',
-        related_name = 'tags_rec'
+        related_name='tags_rec'
         )
 
     class Meta:
@@ -92,7 +91,6 @@ class RecipeTag(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    "Модель Ингредиентов для рецептов"
     recipe = models.ForeignKey(
         Recipe,
         related_name='recipe_ingredients',
@@ -118,11 +116,11 @@ class RecipeIngredient(models.Model):
             )]
 
     def __str__(self):
-        return f'{self.ingredient_id} {self.amount} in {self.recipe} - {self.recipe_id}'
+        return f'''{self.ingredient_id} {self.amount}
+        in {self.recipe} - {self.recipe_id}'''
 
 
 class Favorite(models.Model):
-    """Модель избранного"""
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -149,7 +147,6 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    """Модель покупок"""
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

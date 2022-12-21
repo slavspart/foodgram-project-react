@@ -1,9 +1,8 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, permissions, status, viewsets
+from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
 from .mixins import CreateDestroyViewset
@@ -65,6 +64,7 @@ class ShoppingCartViewSet(CreateDestroyViewset,):
     queryset = ShoppingCart.objects.all()
     serializer_class = ShoppingCartSerializer
 
+
 @api_view(['GET'])
 def get_shop(request):
     ings = {}
@@ -73,9 +73,10 @@ def get_shop(request):
             recipe__in=Recipe.objects.filter(
                 selected__in=request.user.shopping_cart.all()))).annotate(
                     amount=Sum('ingrec__amount')):
-        ings[ingredient]= f'{ingredient.amount} {ingredient.measurement_unit}'
+        ings[ingredient] = f'{ingredient.amount} {ingredient.measurement_unit}'
     cart_text = ''
     for item in ings:
         cart_text += f'''{item} - {ings[item]}
 '''
+#
     return HttpResponse(cart_text, content_type="text/plain")
