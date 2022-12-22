@@ -1,3 +1,5 @@
+from os import linesep
+
 from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -19,8 +21,6 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    # фронтенд устроен так, что он не передает токен при запросе
-    # тэгов и ингредиентов
 
 
 class RecipeViewSet(
@@ -67,16 +67,15 @@ class ShoppingCartViewSet(CreateDestroyViewset,):
 
 @api_view(['GET'])
 def get_shop(request):
-    ings = {}
+    cart_text = ''
     for ingredient in Ingredient.objects.filter(
         ingrec__in=RecipeIngredient.objects.filter(
             recipe__in=Recipe.objects.filter(
                 selected__in=request.user.shopping_cart.all()))).annotate(
-                    amount=Sum('ingrec__amount')):
-        ings[ingredient] = f'{ingredient.amount} {ingredient.measurement_unit}'
-    cart_text = ''
-    for item in ings:
-        cart_text += f'''{item} - {ings[item]}
-'''
-#
+                    amount=Sum(
+                        'ingrec__amount')).values_list(
+                            'name', 'amount', 'measurement_unit'):
+        cart_text += (f'{ingredient[0]} - {ingredient[1]} {ingredient[2]}'
+                      + linesep)
+
     return HttpResponse(cart_text, content_type="text/plain")

@@ -14,6 +14,7 @@ class CreateDestroyViewset(
         serializer.save(recipe_id=recipe, user=user)
 
     def destroy(self, request, *args, **kwargs):
-        instance = request.user.favorite.filter(recipe=kwargs.get('id'))
+        instance = self.get_queryset().get(
+            user=request.user, recipe=kwargs.get('id'))
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)

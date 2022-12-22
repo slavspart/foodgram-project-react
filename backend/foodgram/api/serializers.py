@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from users.serializers import UserSerializer
 
+from users.serializers import UserSerializer
 from .fields import Base64ImageField
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
                      ShoppingCart, Tag)
@@ -23,7 +23,6 @@ class RecipeIngredientSerializer (serializers.ModelSerializer):
         source='ingredient.measurement_unit')
     id = serializers.PrimaryKeyRelatedField(
         source='ingredient', queryset=Ingredient.objects.all())
-    # здесь имеется в виду id ингредиента
     name = serializers.CharField(source='ingredient.name')
 
     class Meta:
@@ -61,7 +60,6 @@ class RecipeSerializer (serializers.ModelSerializer):
         if self.context.get('request').user.is_authenticated:
             return obj.favorite.filter(
                 user=self.context.get('request').user).exists()
-        # значение равно существуют ли объекты связанной модели с request.user
         return False
 
     def get_is_in_shopping_cart(self, obj):
@@ -84,10 +82,7 @@ class RecipeIngredientCreateSerializer (serializers.ModelSerializer):
         source='ingredient',
         queryset=Ingredient.objects.all()
     )
-    # здесь имеется в виду id ингредиента
     name = serializers.CharField(source='ingredient.name', required=False)
-    # required=False, чтобы можно было передавать
-    # не все поля при создании объекта
 
     class Meta:
         model = RecipeIngredient
@@ -156,44 +151,20 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                     'amount') for ingredient in validated_data.pop(
                         'recipe_ingredients')}
         tags = validated_data.pop('tags')
-        # удаляем из validated_data ингредиенты и тэги
-        # т.к. нельзя прямо оттуда
-        # передать значение в рецепт
         instance = Recipe.objects.create(**validated_data)
-        # создаем рецепт без ингредиентов
         self.create_recipe_ingredients(instance, ingredients)
-        # переиспользуем метод создания ингредиентов 1 раз
         self.create_recipe_tags(instance, tags)
         return instance
 
     def update(self, instance, validated_data):
-        existing_ingredients = Ingredient.objects.filter(
-            ingrec__in=instance.recipe_ingredients.all())
+        instance.recipe_ingredients.all().delete()
         request_ingredients = {
             ingredient.get('ingredient'): ingredient.get('amount')
             for ingredient in validated_data.pop('recipe_ingredients')}
-        new_ingredients = {}
-        for ingredient in existing_ingredients:
-            if ingredient not in request_ingredients:
-                RecipeIngredient.objects.filter(
-                    ingredient=ingredient, recipe=instance).delete()
-        for ingredient, amount in request_ingredients.items():
-            if not RecipeIngredient.objects.filter(
-                    ingredient=ingredient, recipe=instance).exists():
-                new_ingredients[ingredient] = amount
-            else:
-                RecipeIngredient.objects.filter(
-                        ingredient=ingredient).update(
-                        amount=amount)
-        self.create_recipe_ingredients(instance, new_ingredients)
-        # переиспользуем метод create_recipe_ingredient 2 раз
-        # метод create recipe_tag переиспользовать не надо, т.к.
-        # все работает из коробки
-        instance.save()
+        self.create_recipe_ingredients(instance, request_ingredients)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        # меняем тип поля tags для отображения
         self.fields['tags'] = RecipeTagSerializer(
             many=True, source='recipe_tags')
         return super().to_representation(instance)
@@ -202,9 +173,6 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
     """Сериализатор избранного"""
     id = serializers.PrimaryKeyRelatedField(read_only=True, source='recipe')
-    # read_only = True, т.к. данные id берется не из payload
-    # (иначе будет требовать заполнения полей в момент
-    # валидации для unique_together)
     name = serializers.CharField(required=False, source='recipe.name')
     image = Base64ImageField(required=False, source='recipe.image')
     cooking_time = serializers.IntegerField(

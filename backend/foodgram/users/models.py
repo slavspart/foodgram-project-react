@@ -6,7 +6,6 @@ from django.db.models import F, Q
 
 class User(AbstractUser):
     """Модель юзер"""
-# поля пароль и username уже есть в Abstractuser
     email = models.EmailField(
         max_length=254,
         unique=True,

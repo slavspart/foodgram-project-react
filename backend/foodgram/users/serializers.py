@@ -58,10 +58,6 @@ class UserRegistrSerializer(serializers.ModelSerializer):
         instance.set_password(validated_data['password'])
         instance.save()
         return instance
-# прописываем метод create, для того чтобы при создании
-# использовать set_password, который зашифрует пароль
-# тогда можно получить токен
-# обновление пароля делается стандартными классами djoser
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):

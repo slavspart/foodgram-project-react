@@ -1,12 +1,9 @@
-from users.models import User
-
 from django.db import models
-# поправил но странно, что isort предлагает именно
-# предыдущий вариант
+
+from users.models import User
 
 
 class Tag(models.Model):
-    """Модель тэгов"""
     name = models.CharField(max_length=100, verbose_name='имя')
     color = models.CharField(max_length=7, verbose_name='цвет')
     slug = models.SlugField(unique=True, verbose_name='slug')
