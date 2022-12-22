@@ -8,8 +8,8 @@ from rest_framework.decorators import api_view
 
 from .filters import IngredientFilter, RecipeFilter
 from .mixins import CreateDestroyViewset
-from .models import (Favorite, Ingredient, Recipe,
-                     RecipeIngredient, ShoppingCart, Tag)
+from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                     ShoppingCart, Tag)
 from .pagination import LimitPagination
 from .permissions import UpdateRestriction
 from .serializers import (FavoriteSerializer, IngredientSerializer,
