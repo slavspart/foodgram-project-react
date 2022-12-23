@@ -1,9 +1,9 @@
-from api.models import Recipe
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from .models import Subscription, User
+from api.models import Recipe
 
 
 class RecipeForSubscriptionSerializer(serializers.ModelSerializer):
@@ -70,9 +70,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         required=False, source='author.last_name')
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
-    # Используем methodfield
-    # засунем nested serializer в функцию get_serializer, чтобы добавить
-    # фильтрацию по recipes_limit
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
