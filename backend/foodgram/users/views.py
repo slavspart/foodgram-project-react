@@ -4,13 +4,19 @@ from rest_framework.response import Response
 
 from .models import Subscription, User
 from .pagination import LimitPagination
-from .serializers import SubscriptionSerializer, UserSerializer
+from .serializers import (SubscriptionSerializer, UserRegistrSerializer,
+                          UserSerializer)
 
 
 class CustomUserViewsSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = LimitPagination
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserRegistrSerializer
+        return super().get_serializer_class()
 
 
 class SubscriptionViewSet(
