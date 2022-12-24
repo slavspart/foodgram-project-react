@@ -20,7 +20,7 @@ class User(AbstractUser):
         max_length=150,
         verbose_name='фамилия'
     )
-    is_surbscribed = models.BooleanField(blank=True, default=False)
+    is_subscribed = models.BooleanField(blank=True, default=False)
 
     class Meta:
         verbose_name = 'Пользователь'

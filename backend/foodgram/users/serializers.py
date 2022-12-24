@@ -13,16 +13,18 @@ class RecipeForSubscriptionSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(UserSerializer):
-    is_surbscribed = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'is_surbscribed')
+                  'last_name', 'is_subscribed')
 
-    def get_is_surbscribed(self, obj):
-        return self.context.get('request').user.follower.filter(
-            author=obj).exists()
+    def get_is_subscribed(self, obj):
+        if self.context.get('request').user.is_authenticated:
+            return self.context.get('request').user.follower.filter(
+                author=obj).exists()
+        return False
 
 
 class UserRegistrSerializer(serializers.ModelSerializer):
